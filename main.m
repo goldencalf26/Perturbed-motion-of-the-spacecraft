@@ -1,6 +1,6 @@
 clc; clear all; close all;
 % Initial conditions
-mu = 398602; % gravity coefficient
+mu = 398600; % gravity coefficient
 eps = 2.634e+10;% Earth compression constant
 J = 1082e-6; % The second zonal harmonic
 i_0 = deg2rad(75); % inclination
@@ -33,10 +33,8 @@ xlim([0 60000])
 hold off
 grid on
 
+[Cxx, Cyy, Czz] = CoffC(X);
 
-Cxx = X(:,2).*X(:,6) - X(:,3).*X(:,5);
-Cyy = X(:,3).*X(:,4) - X(:,1).*X(:,6);
-Czz = X(:,1).*X(:,5) - X(:,2).*X(:,4);
 C = sqrt(Cxx.^2 + Cyy.^2 + Czz.^2);
 Ci = Czz./C;
 
@@ -44,10 +42,10 @@ Om = 180 - mod(atan2d(-Cxx, Cyy), 360); % longitude of the ascending node
 inc = mod(acosd(Czz./C), 180); % inclination
 inc_w = acos(Czz./C);
 u_w = asin(X(:,3)./(r_mod.*sin(inc_w)));
+
 % projections of the disturbing acceleration on the radial, transversal and normal direction
-S_w = eps./r_mod.^4.*(3.*sin(inc_w).^2.*sin(u_w).^2 - 1);
-T_w = -eps./r_mod.^4.*sin(inc_w).^2.*sin(2.*u_w);
-W_w = -eps./r_mod.^4.*sin(2.*inc_w).*sin(u_w);
+[S_w, T_w, W_w] = STW(eps, r_mod, inc_w, u_w);
+
 p_w = C.^2./mu;
 nu_w = V_mod.*r_mod./mu;
 tetta_wB = acos(sqrt(nu_w.*mu.*r_mod./C.^2));
@@ -56,7 +54,7 @@ tetta_wm = atan(nu_w.*sin(tetta_wB).*cos(tetta_wB)./(nu_w.*cos(tetta_wB).^2 - 1)
 w_w = sqrt(p_w./mu).*(-S_w.*cos(tetta_wm)./e_w + T_w.*(1 + r_mod./p_w).*sin(tetta_wm)./e_w - W_w.*r_mod./p_w.*cot(inc_w).*sin(u_w));...
     ...changing the argument of the pericenter at every second
 
-
+% Plots
 figure;
 plot(t_interval, abs(Om),'red');
 xlabel('Time, s');
